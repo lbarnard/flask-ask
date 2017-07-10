@@ -32,7 +32,6 @@ def find_ask():
                     return getattr(blueprints[blueprint_name], 'ask')
 
 
-
 request = LocalProxy(lambda: find_ask().request)
 session = LocalProxy(lambda: find_ask().session)
 version = LocalProxy(lambda: find_ask().version)
@@ -42,7 +41,6 @@ current_stream = LocalProxy(lambda: find_ask().current_stream)
 stream_cache = LocalProxy(lambda: find_ask().stream_cache)
 
 from . import models
-
 
 _converters = {'date': to_date, 'time': to_time, 'timedelta': to_timedelta}
 
@@ -190,6 +188,7 @@ class Ask(object):
         @wraps(f)
         def wrapper(*args, **kw):
             self._flask_view_func(*args, **kw)
+
         return f
 
     def session_ended(self, f):
@@ -210,6 +209,7 @@ class Ask(object):
         @wraps(f)
         def wrapper(*args, **kw):
             self._flask_view_func(*args, **kw)
+
         return f
 
     def intent(self, intent_name, mapping={}, convert={}, default={}):
@@ -236,6 +236,7 @@ class Ask(object):
                 returns no corresponding slot, or a slot with an empty value
                 default: {}
         """
+
         def decorator(f):
             self._intent_view_funcs[intent_name] = f
             self._intent_mappings[intent_name] = mapping
@@ -245,7 +246,9 @@ class Ask(object):
             @wraps(f)
             def wrapper(*args, **kw):
                 self._flask_view_func(*args, **kw)
+
             return f
+
         return decorator
 
     def default_intent(self, f):
@@ -255,6 +258,7 @@ class Ask(object):
         @wraps(f)
         def wrapper(*args, **kw):
             self._flask_view_func(*args, **kw)
+
         return f
 
     def on_playback_started(self, mapping={'offset': 'offsetInMilliseconds'}, convert={}, default={}):
@@ -278,6 +282,7 @@ class Ask(object):
             logger.info('stream has token {}'.format(token))
             logger.info('Current position within the stream is {} ms'.format(offset))
         """
+
         def decorator(f):
             self._intent_view_funcs['AudioPlayer.PlaybackStarted'] = f
             self._intent_mappings['AudioPlayer.PlaybackStarted'] = mapping
@@ -287,7 +292,9 @@ class Ask(object):
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
     def on_playback_finished(self, mapping={'offset': 'offsetInMilliseconds'}, convert={}, default={}):
@@ -309,6 +316,7 @@ class Ask(object):
 
         Audioplayer Requests do not include the stream URL, it must be accessed from current_stream.url
         """
+
         def decorator(f):
             self._intent_view_funcs['AudioPlayer.PlaybackFinished'] = f
             self._intent_mappings['AudioPlayer.PlaybackFinished'] = mapping
@@ -318,7 +326,9 @@ class Ask(object):
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
     def on_playback_stopped(self, mapping={'offset': 'offsetInMilliseconds'}, convert={}, default={}):
@@ -347,6 +357,7 @@ class Ask(object):
 
         Audioplayer Requests do not include the stream URL, it must be accessed from current_stream.url
         """
+
         def decorator(f):
             self._intent_view_funcs['AudioPlayer.PlaybackStopped'] = f
             self._intent_mappings['AudioPlayer.PlaybackStopped'] = mapping
@@ -356,7 +367,9 @@ class Ask(object):
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
     def on_playback_nearly_finished(self, mapping={'offset': 'offsetInMilliseconds'}, convert={}, default={}):
@@ -402,6 +415,7 @@ class Ask(object):
             _infodump('Stream at {} ms when Playback Request sent'.format(pos))
             _infodump('Stream holds the token {}'.format(stream_token))
         """
+
         def decorator(f):
             self._intent_view_funcs['AudioPlayer.PlaybackNearlyFinished'] = f
             self._intent_mappings['AudioPlayer.PlaybackNearlyFinished'] = mapping
@@ -411,7 +425,9 @@ class Ask(object):
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
     def on_playback_failed(self, mapping={}, convert={}, default={}):
@@ -439,6 +455,7 @@ class Ask(object):
 
                     playerActivity - player state when the error occurred
         """
+
         def decorator(f):
             self._intent_view_funcs['AudioPlayer.PlaybackFailed'] = f
             self._intent_mappings['AudioPlayer.PlaybackFailed'] = mapping
@@ -448,7 +465,9 @@ class Ask(object):
             @wraps(f)
             def wrapper(*args, **kwargs):
                 self._flask_view_func(*args, **kwargs)
+
             return f
+
         return decorator
 
     @property
@@ -493,7 +512,7 @@ class Ask(object):
 
     @property
     def current_stream(self):
-        #return getattr(_app_ctx_stack.top, '_ask_current_stream', models._Field())
+        # return getattr(_app_ctx_stack.top, '_ask_current_stream', models._Field())
         user = self._get_user()
         if user:
             stream = top_stream(self.stream_cache, user)
@@ -515,7 +534,6 @@ class Ask(object):
         if self.context:
             return self.context.get('System', {}).get('user', {}).get('userId')
         return None
-                
 
     def _alexa_request(self, verify=True):
         raw_body = flask_request.data
@@ -534,7 +552,7 @@ class Ask(object):
                 timestamp = aniso8601.parse_datetime(alexa_request_payload['request']['timestamp'])
             except AttributeError:
                 import datetime
-                timestamp = datetime.datetime.fromtimestamp(alexa_request_payload['request']['timestamp']/1000)
+                timestamp = datetime.datetime.fromtimestamp(alexa_request_payload['request']['timestamp'] / 1000)
             if not current_app.debug or self.ask_verify_timestamp_debug:
                 verifier.verify_timestamp(timestamp)
             # verify application id
@@ -579,7 +597,8 @@ class Ask(object):
         self.request = request_body.request
         self.version = request_body.version
         self.context = getattr(request_body, 'context', models._Field())
-        self.session = getattr(request_body, 'session', self.session) # to keep old session.attributes through AudioRequests
+        self.session = getattr(request_body, 'session',
+                               self.session)  # to keep old session.attributes through AudioRequests
 
         if not self.session:
             self.session = models._Field()
@@ -690,7 +709,6 @@ class Ask(object):
 
 
 class YamlLoader(BaseLoader):
-
     def __init__(self, app, path):
         self.path = app.root_path + os.path.sep + path
         self.mapping = {}
