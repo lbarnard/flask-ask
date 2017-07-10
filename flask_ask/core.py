@@ -530,7 +530,11 @@ class Ask(object):
             # verify signature
             verifier.verify_signature(cert, signature, raw_body)
             # verify timestamp
-            timestamp = aniso8601.parse_datetime(alexa_request_payload['request']['timestamp'])
+            try:
+                timestamp = aniso8601.parse_datetime(alexa_request_payload['request']['timestamp'])
+            except AttributeError:
+                import datetime
+                timestamp = datetime.datetime.fromtimestamp(alexa_request_payload['request']['timestamp']/1000)
             if not current_app.debug or self.ask_verify_timestamp_debug:
                 verifier.verify_timestamp(timestamp)
             # verify application id
